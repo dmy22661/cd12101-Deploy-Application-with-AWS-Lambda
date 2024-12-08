@@ -1,9 +1,15 @@
+import AWSXRay from 'aws-xray-sdk-core';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand, PutCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { createLogger } from '../utils/logger.mjs'
 
 const logger = createLogger('todoAccess')
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "us-east-1" }));
+// Tích hợp X-Ray
+const dynamoDbClient = new DynamoDBClient({ region: 'us-east-1' });
+const dynamoDbClientWithXRay = AWSXRay.captureAWSv3Client(dynamoDbClient);
+
+// Tạo DynamoDBDocumentClient từ client đã tích hợp X-Ray
+const docClient = DynamoDBDocumentClient.from(dynamoDbClientWithXRay);
 const todosTable = process.env.TODOS_TABLE;
 
 export const getTodos = async (userId) => {
